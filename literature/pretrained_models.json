@@ -1,0 +1,14 @@
+{
+	"openface": {
+		"url": "https://github.com/cmusatyalab/openface",
+		"comment": "openface is an open source framework from the carnegie mellow university"
+	},
+	"facenet": {
+		"url": "https://github.com/davidsandberg/facenet",
+		"comment": "facenet is the google network for face recognition, right now state of the art of the problem. The link is to an open source implementation of facenet"
+	},
+	"facealignement": {
+		"url": "https://github.com/kpzhang93/MTCNN_face_detection_alignment",
+		"comment": "we might try to align the tails of the whales later on in the development to enhance the accuracy"
+	}
+}
