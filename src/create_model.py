@@ -20,11 +20,11 @@ def build_model(input_shape=None, embedding_dim=60, dropout=0.5, weights="imagen
 
     print("Setting trainable layers...")
     conv_model.trainable = True
+    after_checkpoint = False
     for layer in conv_model.layers:
         if layer.name == 'activation_166':
-            layer.trainable = True
-        else:
-            layer.trainable = False
+            after_checkpoint = True
+        layer.trainable = after_checkpoint
         print("layer {} is {}".format(layer.name, '+++trainable' if layer.trainable else '---frozen'))
     conv_model.summary()
     print("Embedding model created in %f s. Printing summary..." % (time.time() - now))
