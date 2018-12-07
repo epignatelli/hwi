@@ -27,9 +27,10 @@ def get_triples(pairs_dict, csv_out_path="../triplets.csv"):
                 negative_key = random.choice(keys)
                 negative_img_list = pairs_dict[negative_key]
 
-                while len(negative_img_list) <= 0:
+                while (len(negative_img_list) <= 0) or (negative_key == key):
+                    # choice on a empty key, probably because it's the anchor one
                     negative_key = random.choice(keys)
-                    negative_img_list = pairs_dict[negative_key]                    
+                    negative_img_list = pairs_dict[negative_key]
 
                 negative_name = random.choice(pairs_dict[negative_key])
                 triplet = (anchor_name, positive_name, negative_name)
