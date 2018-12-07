@@ -2,12 +2,19 @@ import os
 import csv
 import random
 import numpy as np
+import cv2
+from keras.applications.nasnet import preprocess_input
+from keras.preprocessing.image import ImageDataGenerator
 
 
-def get_triples(pairs_dict, csv_out_path="../triplets.csv"):
+def get_triplets(pairs_dict, csv_out_path="../triplets.csv"):
     """
-    Inputs a list of key value pairs (key, value) and returns a list of triplets
+    Inputs a list of key value pairs (key, value) and returns a list of triplets.
     """
+
+    # TODO: The current implementation gets jsut one negative example for each anchor
+    # Thus, the number of triplets is equal to the number of images with at least a positive example
+
     with open(csv_out_path, "w+") as csvout:
         w = csv.writer(csvout)
 
@@ -28,7 +35,7 @@ def get_triples(pairs_dict, csv_out_path="../triplets.csv"):
                 negative_img_list = pairs_dict[negative_key]
 
                 while (len(negative_img_list) <= 0) or (negative_key == key):
-                    # choice on a empty key, probably because it's the anchor one
+                    # Got empty key, probably because it's the anchor one, let's pick another one
                     negative_key = random.choice(keys)
                     negative_img_list = pairs_dict[negative_key]
 
@@ -37,7 +44,7 @@ def get_triples(pairs_dict, csv_out_path="../triplets.csv"):
 
                 triplets.append(triplet)
                 w.writerow(triplet)
-    return
+    return triplets
 
 
 def get_pairs_dict(csv_path="../train.csv"):
@@ -60,44 +67,53 @@ def get_pairs_dict(csv_path="../train.csv"):
     return d
 
 
-def get_image(id, img_id_dict, data_folder="../data/train"):
-    cv2.imread(os.path.join(data_folder, img_id_dict))
-
-
-def gen(triplet_gen, batch_size=64):
-    while True:
-        list_positive_examples_1 = []
-        list_negative_examples = []
-        list_positive_examples_2 = []
+def triplets_generator(triplets, generator=None, data_folder="../data/train", batch_size=64):
+    """
+    triplets is a tuple (anchor, positive, negative) of image names
+    """
+    n_batches = len(triplets) // batch_size
+    for j in range(n_batches):
+        anchor_list = []
+        neg_list = []
+        pos_list = []
 
         for i in range(batch_size):
-            positive_example_1, negative_example, positive_example_2 = triplet_gen.get_sample()
-            path_pos1 = join(path_train, positive_example_1)
-            path_neg = join(path_train, negative_example)
-            path_pos2 = join(path_train, positive_example_2)
+            anchor_name, pos_name, neg_name = triplets[(j * batch_size) + i]
+            anchor_path = os.path.join(data_folder, anchor_name)
+            pos_path = os.path.join(data_folder, pos_name)
+            neg_path = os.path.join(data_folder, neg_name)
 
-            positive_example_1_img = read_and_resize(path_pos1)
-            negative_example_img = read_and_resize(path_neg)
-            positive_example_2_img = read_and_resize(path_pos2)
+            anchor_img = cv2.imread(anchor_path)
+            positive_img = cv2.imread(pos_path)
+            negative_img = cv2.imread(neg_path)
 
-            positive_example_1_img = augment(positive_example_1_img)
-            negative_example_img = augment(negative_example_img)
-            positive_example_2_img = augment(positive_example_2_img)
+            # anchor_img = generator.apply_transform(anchor_img)
+            # positive_img = generator.apply_transform(positive_img)
+            # negative_img = generator.apply_transform(negative_img)
 
-            list_positive_examples_1.append(positive_example_1_img)
-            list_negative_examples.append(negative_example_img)
-            list_positive_examples_2.append(positive_example_2_img)
+            anchor_list.append(anchor_img)
+            pos_list.append(positive_img)
+            neg_list.append(negative_img)
 
-        A = preprocess_input(np.array(list_positive_examples_1))
-        B = preprocess_input(np.array(list_positive_examples_2))
-        C = preprocess_input(np.array(list_negative_examples))
+        A = np.array(anchor_list)
+        B = np.array(pos_list)
+        C = np.array(neg_list)
+        print(A.shape, B.shape, C.shape)
+        # A = preprocess_input(A)
+        # B = preprocess_input(B)
+        # C = preprocess_input(C)
 
         label = None
-
-        yield ({'anchor_input': A, 'positive_input': B, 'negative_input': C}, label)
+        trip = {'anchor_input': A, 'positive_input': B, 'negative_input': C}
+        # print(trip)
+        yield (trip, label)
 
 
 # Test
 if __name__ == "__main__":
     pairs = get_pairs_dict()
-    get_triples(pairs)
+    triplets = get_triplets(pairs)
+
+    data_gen = ImageDataGenerator()
+    train_gen = triplets_generator(triplets)
+    next(train_gen)
