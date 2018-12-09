@@ -1,5 +1,4 @@
 import os
-import argparse
 import time
 import datetime
 import json
@@ -8,18 +7,20 @@ import getpass
 import numpy as np
 import tensorflow as tf
 import keras
+import pandas as pd
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
+from keras.applications.nasnet import preprocess_input
 import create_model
 import preprocess
 
 
-def train(model, train_dir, test_dir=None, out_dir=None,
-          input_shape=(331, 331, 3),
+def train(model, train_map_path, train_dir, test_dir=None, out_dir=None,
+          input_shape=(224, 224, 3),
           weights="../weights/nasnet-imagenet_weights.h5",
           embedding_dim=60,
           epochs=10,
-          batch_size=32,):
+          batch_size=16,):
     
     print("Setting up variables...")
     timestamp = int(time.time())
@@ -27,7 +28,7 @@ def train(model, train_dir, test_dir=None, out_dir=None,
     # setting folders
     destination_dir = os.path.join(train_dir, "..", "bin")
     training_out_dir = os.path.join(destination_dir, "sessions", "training", "training_" + str(timestamp))
-    checkpoint_name = "_epoch{epoch:02d}_acc{val_acc:.2f}_loss{val_loss:4f}.hdf5"
+    checkpoint_name = "_epoch{epoch:02d}_loss{loss:6f}.hdf5"
     checkpoint_path = os.path.join(training_out_dir, str(timestamp) + checkpoint_name)
     os.makedirs(training_out_dir)
 
@@ -40,13 +41,13 @@ def train(model, train_dir, test_dir=None, out_dir=None,
     # setting model
     if isinstance(model, str):
         if model == "":
-            encoder, classifier = create_model.build_model(input_shape=input_shape, embedding_dim=embedding_dim, weights=weights)
+            encoder, classifier = create_model.build_model(input_shape="../weights/resnet50-imagenet.hdf5", embedding_dim=embedding_dim, weights=weights)
         else:
             classifier = keras.load_model(model)
     else:
         encoder, classifier = model
 
-    classifier.compile(loss=None, optimizer=Adam(0.01))
+    classifier.compile(loss=None, optimizer=Adam(0.01), metrics=['accuracy'])
 
     # setting callbacks
     checkpoint_callback = keras.callbacks.ModelCheckpoint(checkpoint_path,
@@ -60,18 +61,24 @@ def train(model, train_dir, test_dir=None, out_dir=None,
     print("Getting data...")
     img_gen = ImageDataGenerator(height_shift_range=20,
                                  horizontal_flip=True,
-                                 preprocessing_function=None,
+                                 preprocessing_function=preprocess_input,
                                  )
-    pairs = preprocess.get_pairs_dict("../train.csv")
-    triplets = preprocess.get_triplets(pairs)
-    train_gen = preprocess.triplets_generator(triplets, img_gen)
+
+    df = pd.read_csv(train_map_path)
+    train_gen = preprocess.triplets_from_dataframe(dataframe=df,
+                                                   generator=img_gen,
+                                                   directory=train_dir,
+                                                   target_size=(input_shape[0], input_shape[1]),
+                                                   batch_size=batch_size,
+                                                   )
 
     # fitting data
     print("Now fitting data...")
     history = classifier.fit_generator(train_gen,
                                        epochs=epochs,
-                                       steps_per_epoch=1000,
-                                       callbacks=[checkpoint_callback]
+                                       steps_per_epoch=10,
+                                       callbacks=[checkpoint_callback],
+                                       verbose=1
                                        )
 
     # Saving model and history
