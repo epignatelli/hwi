@@ -26,8 +26,8 @@ def build_model(input_shape=None, embedding_dim=60, dropout=0.5, weights="imagen
             after_checkpoint = True
         layer.trainable = after_checkpoint
         print("layer {} is {}".format(layer.name, '+++trainable' if layer.trainable else '---frozen'))
-    conv_model.summary()
     print("Embedding model created in %f s. Printing summary..." % (time.time() - now))
+    conv_model.summary()
 
     x = conv_model.output
     x = Dropout(dropout)(x)
