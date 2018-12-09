@@ -17,6 +17,7 @@ def triplets_generator(triplets, img_size=None, generator=None, data_folder="../
         img_size = (331, 331)
     n_batches = len(triplets) // batch_size
     for j in range(n_batches):
+        print("Batch %d in progress..." % j)
         anchor_list = []
         neg_list = []
         pos_list = []
@@ -64,7 +65,9 @@ def get_triplets(pairs_dict, csv_out_path="../triplets.csv"):
 
     print("Creating triplets from images list...")
     with open(csv_out_path, "w+") as csvout:
+    with open(csv_out_path, "w+", newline='') as csvout:
         w = csv.writer(csvout)
+        w.writerow(["anchor_input", "positive_input", "negative_input"])
 
         keys = list(pairs_dict.keys())
         triplets = []
