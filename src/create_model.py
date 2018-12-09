@@ -48,6 +48,7 @@ def build_model(input_shape=None, embedding_dim=60, dropout=0.5, weights="imagen
 
     triplet_model = Model(inputs, outputs)
     triplet_model.add_loss(K.mean(triplet_loss(outputs)))
+    triplet_model.summary()
 
     return embedding_model, triplet_model
 

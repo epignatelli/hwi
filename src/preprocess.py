@@ -33,9 +33,9 @@ def triplets_generator(triplets, img_size=None, generator=None, data_folder="../
             negative_img = cv2.imread(neg_path)
 
             # resize
-            anchor_img = cv2.resize(anchor_img, img_size)
-            positive_img = cv2.resize(positive_img, img_size)
-            negative_img = cv2.resize(negative_img, img_size)
+            anchor_img = cv2.resize(anchor_img, (331, 331), interpolation=cv2.INTER_AREA)
+            positive_img = cv2.resize(positive_img, (331, 331), interpolation=cv2.INTER_AREA)
+            negative_img = cv2.resize(negative_img, (331, 331), interpolation=cv2.INTER_AREA)
 
             anchor_list.append(anchor_img)
             pos_list.append(positive_img)
@@ -44,7 +44,7 @@ def triplets_generator(triplets, img_size=None, generator=None, data_folder="../
         A = np.array(anchor_list, dtype="float32")
         B = np.array(pos_list, dtype="float32")
         C = np.array(neg_list, dtype="float32")
-        print(A.shape, B.shape, C.shape)
+
         A = preprocess_input(A)
         B = preprocess_input(B)
         C = preprocess_input(C)
