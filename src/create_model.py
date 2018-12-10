@@ -54,15 +54,18 @@ def build_model_resnet(input_shape=(224, 224, 3), embedding_dim=60, dropout=0.5,
     now = time.time()
     print("Retrieving ResNet weights...")
     conv_model = ResNet50(input_shape=input_shape, weights=weights)
+    for i in range(2):
+        conv_model.layers.pop()
 
     print("Setting trainable layers...")
     conv_model.trainable = True
     after_checkpoint = False
     for layer in conv_model.layers:
-        if layer.name == 'activation_40':
-            after_checkpoint = True
         layer.trainable = after_checkpoint
+        if layer.name == 'activation_43':
+            after_checkpoint = True
         print("layer {} is {}".format(layer.name, '+++trainable' if layer.trainable else '---frozen'))
+
     print("Embedding model created in %f s. Printing summary..." % (time.time() - now))
     conv_model.summary()
 
@@ -85,7 +88,6 @@ def build_model_resnet(input_shape=(224, 224, 3), embedding_dim=60, dropout=0.5,
 
     triplet_model = Model(inputs, outputs)
     triplet_model.add_loss(K.mean(triplet_loss(outputs)))
-    triplet_model.summary()
 
     return embedding_model, triplet_model
 
