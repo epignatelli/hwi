@@ -13,17 +13,17 @@ from keras.optimizers import Adam
 from keras.applications.nasnet import preprocess_input
 import create_model
 import preprocess
+import loss
 
 
-def train(model, train_map_path, train_dir, test_dir=None, out_dir=None,
-          input_shape=(224, 224, 3),
-          weights="../weights/nasnet-imagenet_weights.h5",
-          embedding_dim=60,
-          epochs=10,
-          batch_size=16,):
+def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_dir="../data/test", hyperparam_path="../hyperparam.json", triplet_mining="online"):
     
     print("Setting up variables...")
     timestamp = int(time.time())
+
+    # setting hyperparameters
+    with open(hyperparam_path, "r") as h_json:
+        hparams = json.load(h_json)
 
     # setting folders
     destination_dir = os.path.join(train_dir, "..", "bin")
@@ -33,21 +33,23 @@ def train(model, train_map_path, train_dir, test_dir=None, out_dir=None,
     os.makedirs(training_out_dir)
 
     # setting input_shape
-    if len(input_shape) <= 2:
-        input_shape = (input_shape[0], input_shape[1], 3)
-    elif input_shape[0] == 3:
-        input_shape = (input_shape[1], input_shape[2], input_shape[0])
+    if len(hparams["input_shape"]) <= 2:
+        input_shape = (hparams["input_shape"][0], hparams["input_shape"][1], 3)
+    elif hparams["input_shape"][0] == 3:
+        input_shape = (hparams["input_shape"][1], hparams["input_shape"][2], hparams["input_shape"][0])
+    else:
+        input_shape = hparams["input_shape"]
 
     # setting model
-    if isinstance(model, str):
-        if model == "":
-            encoder, classifier = create_model.build_model(input_shape="../weights/resnet50-imagenet.hdf5", embedding_dim=embedding_dim, weights=weights)
-        else:
-            classifier = keras.load_model(model)
+    if model is None:
+        classifier = keras.load_model(model)
     else:
-        encoder, classifier = model
+        classifier = model
 
-    classifier.compile(loss=None, optimizer=Adam(0.01), metrics=['accuracy'])
+    if triplet_mining == "online":
+        classifier.compile(loss=loss.batch_all_triplet_loss, optimizer=Adam(hparams["learning_rate"]), metrics=['accuracy'])
+    elif triplet_mining == "offline":
+        classifier.compile(loss=loss.triplet_loss_offline, optimizer=Adam(hparams["learning_rate"]), metrics=['accuracy'])
 
     # setting callbacks
     checkpoint_callback = keras.callbacks.ModelCheckpoint(checkpoint_path,
@@ -56,7 +58,6 @@ def train(model, train_map_path, train_dir, test_dir=None, out_dir=None,
                                                           period=1,
                                                           verbose=1
                                                           )
-
     # Getting data
     print("Getting data...")
     img_gen = ImageDataGenerator(height_shift_range=20,
@@ -64,18 +65,17 @@ def train(model, train_map_path, train_dir, test_dir=None, out_dir=None,
                                  preprocessing_function=preprocess_input,
                                  )
 
-    df = pd.read_csv(train_map_path)
+    df = pd.read_csv(train_csv)
     train_gen = preprocess.triplets_from_dataframe(dataframe=df,
                                                    generator=img_gen,
                                                    directory=train_dir,
                                                    target_size=(input_shape[0], input_shape[1]),
-                                                   batch_size=batch_size,
+                                                   batch_size=hparams["batch_size"],
                                                    )
 
-    # fitting data
     print("Now fitting data...")
     history = classifier.fit_generator(train_gen,
-                                       epochs=epochs,
+                                       epochs=hparams["epochs"],
                                        steps_per_epoch=10,
                                        callbacks=[checkpoint_callback],
                                        verbose=1
@@ -99,5 +99,3 @@ def train(model, train_map_path, train_dir, test_dir=None, out_dir=None,
 
     with open(os.path.join(training_out_dir, str(timestamp) + "_session.json"), 'w+') as outfile:
         json.dump(data, outfile)
-    return
-
