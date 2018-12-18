@@ -53,7 +53,6 @@ def build_model(embedding_dim=60, arch='resnet', weights="imagenet", triplet_min
         layer.trainable = after_checkpoint
         print("layer {} is {}".format(layer.name, '+++trainable' if layer.trainable else '---frozen'))
     print("Embedding model created in %f s. Printing summary..." % (time.time() - now))
-    conv_model.summary()
 
     # Adding encoding layer
     x = conv_model.output
@@ -63,9 +62,13 @@ def build_model(embedding_dim=60, arch='resnet', weights="imagenet", triplet_min
     embedding_model = Model(conv_model.input, x, name="embedding")
 
     # Merging embedding and triplet model
-    anchor_input = Input(input_shape, name='anchor_input')
-    anchor_embedding = embedding_model(anchor_input)
-    if triplet_mining == "offline":
+
+    if triplet_mining == "online":
+        triplet_model = embedding_model
+    
+    elif triplet_mining == "offline":
+        anchor_input = Input(input_shape, name='anchor_input')
+        anchor_embedding = embedding_model(anchor_input)
         positive_input = Input(input_shape, name='positive_input')
         negative_input = Input(input_shape, name='negative_input')
 
@@ -77,19 +80,14 @@ def build_model(embedding_dim=60, arch='resnet', weights="imagenet", triplet_min
 
         triplet_model = Model(inputs, outputs)
 
-    elif triplet_mining == "online":
-        triplet_model = Model([anchor_input], [anchor_input]) 
-
     else:
         print("No valid strategy for training found, no model created")
         return
 
-    # Adding loss to model
     triplet_model.summary()
-
     return triplet_model
 
 
 # Only for test purposes
 if __name__ == "__main__":
-    conv_model, triplet_model = build_model(weights="../weights/resnet50-imagenet.hdf5")
+    triplet_model = build_model(weights="../weights/resnet50-imagenet.hdf5")

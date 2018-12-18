@@ -1,7 +1,7 @@
 """Define functions to create the triplet loss with online triplet mining."""
 
 import tensorflow as tf
-
+from keras import backend as K
 
 def _pairwise_distances(embeddings, squared=False):
     """Compute the 2D matrix of distances between all the embeddings.
@@ -16,7 +16,6 @@ def _pairwise_distances(embeddings, squared=False):
     """
     # Get the dot product between all embeddings
     # shape (batch_size, batch_size)
-    print(embeddings)
     dot_product = tf.matmul(embeddings, tf.transpose(embeddings))
 
     # Get squared L2 norm for each embedding. We can just take the diagonal of `dot_product`.

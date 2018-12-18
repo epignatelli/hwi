@@ -66,12 +66,13 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
                                  )
 
     df = pd.read_csv(train_csv)
-    train_gen = preprocess.triplets_from_dataframe(dataframe=df,
-                                                   generator=img_gen,
-                                                   directory=train_dir,
-                                                   target_size=(input_shape[0], input_shape[1]),
-                                                   batch_size=hparams["batch_size"],
-                                                   )
+    train_gen = img_gen.flow_from_dataframe(dataframe=df,
+                                            directory=train_dir,
+                                            x_col="Image",
+                                            y_col="Id",
+                                            target_size=(input_shape[0], input_shape[1]),
+                                            batch_size=hparams["batch_size"],
+                                            )
 
     print("Now fitting data...")
     history = classifier.fit_generator(train_gen,
