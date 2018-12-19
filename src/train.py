@@ -70,6 +70,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
                                             directory=train_dir,
                                             x_col="Image",
                                             y_col="Id",
+                                            class_mode="sparse",
                                             target_size=(input_shape[0], input_shape[1]),
                                             batch_size=hparams["batch_size"],
                                             )
