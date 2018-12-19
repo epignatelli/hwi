@@ -42,7 +42,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
 
     # setting model
     if model is None:
-        classifier = keras.load_model(model)
+        classifier = create_model.build_model(embedding_dim=hparams["embedding_size"])
     else:
         classifier = model
 
