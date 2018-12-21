@@ -23,8 +23,7 @@ def predict(model="../data/bin/latest_model.h5",
     # Retrieving model
     if isinstance(model, str):
         model = load_model(model_path)
-    else:
-        pass
+
     model.compile(custom_objects={"batch_all_triplet_loss": loss.batch_all_triplet_loss})
 
     with open(target_path, "w+") as outcsv:
