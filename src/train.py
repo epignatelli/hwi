@@ -51,7 +51,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
     # setting callbacks
     checkpoint_callback = keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                           monitor="val_acc",
-                                                          save_best_only=False,
+                                                          save_best_only=True,
                                                           period=1,
                                                           verbose=1
                                                           )
