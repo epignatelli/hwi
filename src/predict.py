@@ -6,10 +6,10 @@ from keras.applications.resnet50 import preprocess_input
 from keras.preprocessing.image import ImageDataGenerator
 import loss
 
-def predict(model_path="../data/bin/latest_model.h5", 
+def predict(model="../data/bin/latest_model.h5", 
             image_dir="../data/test", out_dir="../data/sessions/eval"):
     
-    start = time.time()
+    start = int(time.time())
 
     # Sorting folders
     target_dir = os.path.join(out_dir, str(start))
@@ -21,7 +21,10 @@ def predict(model_path="../data/bin/latest_model.h5",
         print("Warning: " + str(e))
 
     # Retrieving model
-    model = load_model(model_path)
+    if isinstance(model, str):
+        model = load_model(model_path)
+    else:
+        pass
     model.compile(custom_objects={"batch_all_triplet_loss": loss.batch_all_triplet_loss})
 
     with open(target_path, "w+") as outcsv:
