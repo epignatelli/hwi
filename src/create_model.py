@@ -86,7 +86,7 @@ def build_model(embedding_dim=60, arch='resnet', weights="imagenet", triplet_min
         return
 
     if multigpu:
-        model = multi_gpu_model(triplet_model)
+        model = multi_gpu_model(triplet_model, gpus=2)
     model.summary()
     return model
 
