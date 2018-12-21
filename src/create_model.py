@@ -8,10 +8,11 @@ from keras.applications.resnet50 import ResNet50
 # from keras.applications.inception_resnet_v2 import InceptionResNetV2, preprocess_input
 # from keras.applications.inception_v3 import InceptionV3, preprocess_input
 from keras.applications.nasnet import NASNetLarge
+from keras.utils import multi_gpu_model
 from loss import *
 
 
-def build_model(embedding_dim=60, arch='resnet', weights="imagenet", triplet_mining="online"):
+def build_model(embedding_dim=60, arch='resnet', weights="imagenet", triplet_mining="online", multigpu=True):
     """Create a keras model instance base on resnet or nasnet architecture to use for transfer learning
 
     Args:
@@ -84,10 +85,12 @@ def build_model(embedding_dim=60, arch='resnet', weights="imagenet", triplet_min
         print("No valid strategy for training found, no model created")
         return
 
-    triplet_model.summary()
-    return triplet_model
+    if multigpu:
+        model = multi_gpu_model(triplet_model)
+    model.summary()
+    return model
 
 
 # Only for test purposes
 if __name__ == "__main__":
-    triplet_model = build_model(weights="../weights/resnet50-imagenet.hdf5")
+    model = build_model(weights="../weights/resnet50-imagenet.hdf5")
