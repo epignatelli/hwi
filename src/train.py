@@ -4,15 +4,12 @@ import datetime
 import json
 import socket
 import getpass
-import numpy as np
-import tensorflow as tf
 import keras
 import pandas as pd
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
-from keras.applications.nasnet import preprocess_input
+from keras.applications.resnet import preprocess_input
 import create_model
-import preprocess
 import loss
 
 
@@ -65,8 +62,8 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
                                  preprocessing_function=preprocess_input,
                                  )
 
-    df = pd.read_csv(train_csv)
-    train_gen = img_gen.flow_from_dataframe(dataframe=df,
+    df_train = pd.read_csv(train_csv)
+    train_gen = img_gen.flow_from_dataframe(dataframe=df_train,
                                             directory=train_dir,
                                             x_col="Image",
                                             y_col="Id",
