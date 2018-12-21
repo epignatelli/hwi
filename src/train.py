@@ -8,7 +8,7 @@ import keras
 import pandas as pd
 from keras.preprocessing.image import ImageDataGenerator
 from keras.optimizers import Adam
-from keras.applications.resnet import preprocess_input
+from keras.applications.resnet50 import preprocess_input
 import create_model
 import loss
 
