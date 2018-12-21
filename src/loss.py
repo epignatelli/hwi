@@ -171,7 +171,7 @@ def batch_all_triplet_loss(labels, embeddings, margin=0.1, squared=False):
     return triplet_loss
 
 
-def batch_hard_triplet_loss(labels, embeddings, margin, squared=False):
+def batch_hard_triplet_loss(labels, embeddings, margin=0.1, squared=False):
     """Build the triplet loss over a batch of embeddings.
 
     For each anchor, we get the hardest positive and hardest negative to form a triplet.

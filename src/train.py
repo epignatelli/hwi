@@ -44,7 +44,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
         classifier = model
 
     if triplet_mining == "online":
-        classifier.compile(loss=loss.batch_all_triplet_loss, optimizer=Adam(hparams["learning_rate"]), metrics=['accuracy'])
+        classifier.compile(loss=loss.batch_hard_triplet_loss, optimizer=Adam(hparams["learning_rate"]), metrics=['accuracy'])
     elif triplet_mining == "offline":
         classifier.compile(loss=loss.triplet_loss_offline, optimizer=Adam(hparams["learning_rate"]), metrics=['accuracy'])
 
@@ -59,7 +59,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
     print("Getting data...")
     img_gen = ImageDataGenerator(height_shift_range=20,
                                  horizontal_flip=True,
-                                 preprocessing_function=preprocess_input,
+                                 preprocessing_function=preprocess_input,   
                                  )
 
     df_train = pd.read_csv(train_csv)
