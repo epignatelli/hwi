@@ -51,7 +51,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
     # setting callbacks
     checkpoint_callback = keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                           monitor="val_acc",
-                                                          save_best_only=True,
+                                                          save_best_only=False,
                                                           period=1,
                                                           verbose=1
                                                           )
@@ -91,6 +91,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
     data = {
         "Model": str(timestamp) + ".h5",
         "train_history": history.history,
+        "class_indices": train_gen.class_indices,
         "__Tag__": "training",
         "__Time__": datetime.datetime.utcnow().isoformat(),
         "__Origin__": getpass.getuser() + "@" + socket.gethostname()
