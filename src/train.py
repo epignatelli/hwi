@@ -72,6 +72,7 @@ def train(model=None, train_dir="../data/train", train_csv="../train.csv", test_
     # Fitting model
     print("Now fitting data...")
     history = classifier.fit_generator(train_gen,
+                                       use_multiprocessing=True,
                                        epochs=hparams.epochs,
                                        steps_per_epoch=2,
                                        callbacks=[checkpoint_callback],

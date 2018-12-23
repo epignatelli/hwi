@@ -27,10 +27,12 @@ def predict(target="test",
     img_gen = ImageDataGenerator(preprocessing_function=preprocess_input)
 
     iterator = img_gen.flow_from_directory(data_dir,
+                                           shuffle=False,
                                            classes=[target],
                                            batch_size=hparams.batch_size,
                                            target_size=(hparams.input_shape[0], hparams.input_shape[1]))
     preds = model.predict_generator(iterator,
+                                    use_multiprocessing=True,
                                     steps=(iterator.samples // hparams.batch_size) + 1,
                                     verbose=1)
     filenames = [name.split("/")[-1] for name in iterator.filenames]
