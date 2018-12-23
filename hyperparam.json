@@ -1,5 +1,6 @@
 {
     "batch_size": 128,
+    "batch_size_predict": 8192,
     "embedding_size": 256,
     "epochs": 1,
     "input_shape": [224, 224, 3],
