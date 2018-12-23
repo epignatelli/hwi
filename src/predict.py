@@ -34,7 +34,7 @@ def predict(target="test",
                                     verbose=1)
     filenames = [name.split("\\")[-1] for name in iterator.filenames]
 
-    return filenames, preds
+    return preds, filenames
 
 
 def recognize(model, classes_map):
