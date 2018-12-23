@@ -69,7 +69,7 @@ def recognize(model, classes_map):
         preds_str.append(" ".join([x[0] for x in sample_result]))
 
         df = pd.DataFrame(preds_str, columns=["Id"])
-        df['Image'] = [x.split(os.sep)[-1] for x in test_file_names]
+        df['Image'] = test_names
         df.to_csv("sub_humpback.csv", index=False)
 
     return preds_str
