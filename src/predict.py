@@ -32,7 +32,7 @@ def predict(target="test",
     preds = model.predict_generator(iterator,
                                     steps=(iterator.samples // hparams.batch_size) + 1,
                                     verbose=1)
-    filenames = [name.split("\\")[-1] for name in iterator.filenames]
+    filenames = [name.split("/")[-1] for name in iterator.filenames]
 
     return preds, filenames
 
