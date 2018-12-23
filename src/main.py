@@ -13,15 +13,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     device = args.device
 
-    if device is None:
-        device = "0"
+    if device is not None:
+        if "GPU" in [x.name for x in device_lib.list_local_devices()]:
+            dev = "/gpu:" + device
+        else:
+            dev = "/cpu:0"
 
-    if "GPU" in [x.name for x in device_lib.list_local_devices()]:
-        dev = "/gpu:" + device
+        with tf.device(dev):
+            model = create_model.build_model()
+            config, history = train.train(model)
+            result = predict.recognize(model, config["classes_map"])
     else:
-        dev = "/cpu:0"
-
-    with tf.device(dev):
         model = create_model.build_model()
         config, history = train.train(model)
         result = predict.recognize(model, config["classes_map"])
+
