@@ -1,8 +1,8 @@
-name: ml-gpu
+name: ml_gpu
 channels:
   - defaults
 dependencies:
-  - tensorflow
+  - tensorflow-gpu
   - keras
   - pillow
   - pandas

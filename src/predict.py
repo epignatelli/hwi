@@ -5,56 +5,73 @@ import json
 from keras.models import load_model
 from keras.applications.resnet50 import preprocess_input
 from keras.preprocessing.image import ImageDataGenerator
+from sklearn.neighbors import NearestNeighbors
+from hyperparameters import Hparams
 import loss
 
-def predict(model="../data/bin/latest_model.h5", 
-            image_dir="../data",
-            out_dir="../data/bin/sessions/eval",
+
+def predict(target="test",
+            model="../data/bin/latest_model.h5",
+            data_dir="../data",
             hyperparam_path="../hyperparam.json"):
-    
-    start = int(time.time())
-
-    # Sorting folders
-    target_dir = os.path.join(out_dir, str(start))
-    target_path = os.path.join(target_dir, str(start) + ".csv")
-
-    try:
-        os.mkdir(target_dir)
-    except OSError as e:
-        print("Warning: " + str(e))
 
     # Retrieving hyper parameters
-    with open(hyperparam_path, "r") as h_json:
-        hparams = json.load(h_json)
+    hparams = Hparams(hyperparam_path)
 
-    if len(hparams["input_shape"]) <= 2:
-        input_shape = (hparams["input_shape"][0], hparams["input_shape"][1], 3)
-    elif hparams["input_shape"][0] == 3:
-        input_shape = (hparams["input_shape"][1], hparams["input_shape"][2], hparams["input_shape"][0])
-    else:
-        input_shape = hparams["input_shape"]
-
-    # Retrieving model
+    # If model is a path, loading it
     if isinstance(model, str):
         model = load_model(model, custom_objects={"batch_hard_triplet_loss": loss.batch_hard_triplet_loss})
 
-    with open(target_path, "w+") as outcsv:
-        csv_writer = csv.writer(outcsv)
+    # Generating embedding from trained model
+    img_gen = ImageDataGenerator(preprocessing_function=preprocess_input)
 
-        img_gen = ImageDataGenerator(preprocessing_function=preprocess_input)
+    iterator = img_gen.flow_from_directory(data_dir,
+                                           classes=[target],
+                                           batch_size=hparams.batch_size,
+                                           target_size=(hparams.input_shape[0], hparams.input_shape[1]))
+    preds = model.predict_generator(iterator,
+                                    steps=(iterator.samples // hparams.batch_size) + 1,
+                                    verbose=1)
+    filenames = [name.split("\\")[-1] for name in iterator.filenames]
 
-        test_gen = img_gen.flow_from_directory(image_dir,
-                                               classes=["test"],
-                                               target_size=(input_shape[0], input_shape[1]))
+    return filenames, preds
 
-        result = model.predict_generator(test_gen,
-                                         steps=1,
-                                         verbose=1)
-        csv_writer.writerow(["Image", "Id"])
-        for pred in result:
-            print(pred)
-            print("%d Images" % test_gen.samples)
-            print("Result shape", pred.shape)
+
+def recognize(model, classes_map):
+    # Creating databse to search from. Saving it ti hwi/train_preds.csv
+    train_preds, train_names = predict(model=model, target="train")
+
+    # Creating embedding of test files
+    test_preds, test_names = predict(model=model, target="test")
+
+    # Searching for the test[i] nearest point in the entire train set
+    neigh = NearestNeighbors(n_neighbors=6)
+    neigh.fit(train_preds)
+    distances_test, neighbors_test = neigh.kneighbors(test_preds)
+    distances_test, neighbors_test = distances_test.tolist(), neighbors_test.tolist()
+
+    # Co
+    preds_str = []
+    for filepath, distance, neighbour_ in zip(test_names, distances_test, neighbors_test):
+        sample_result = []
+        sample_classes = []
+        for d, n in zip(distance, neighbour_):
+            train_file = train_names[n]
+            class_train = classes_map[train_file]
+            sample_classes.append(class_train)
+            sample_result.append((class_train, d))
+
+        if "new_whale" not in sample_classes:
+            sample_result.append(("new_whale", 0.1))
+        sample_result.sort(key=lambda x: x[1])
+        sample_result = sample_result[:5]
+        preds_str.append(" ".join([x[0] for x in sample_result]))
+
+        df = pd.DataFrame(preds_str, columns=["Id"])
+        df['Image'] = [x.split(os.sep)[-1] for x in test_file_names]
+        df.to_csv("sub_humpback.csv", index=False)
+
+    return preds_str
 
 
 if __name__ == "__main__":

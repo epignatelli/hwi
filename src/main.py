@@ -3,6 +3,8 @@ import predict
 import train
 import argparse
 import tensorflow as tf
+from tensorflow.python.client import device_lib
+
 
 # if not an imported module
 if __name__ == "__main__":
@@ -12,11 +14,14 @@ if __name__ == "__main__":
     device = args.device
 
     if device is None:
-    	device = "0"
+        device = "0"
 
-    dev = "/gpu:" + device
+    if "GPU" in [x.name for x in device_lib.list_local_devices()]:
+        dev = "/gpu:" + device
+    else:
+        dev = "/cpu:0"
 
     with tf.device(dev):
-    	model = create_model.build_model()
-    	trained = train.train(model)
-    	result = predict.predict(model)
+        model = create_model.build_model()
+        config, history = train.train(model)
+        result = predict.recognize(model, config["classes_map"])
