@@ -1,4 +1,4 @@
-[![Slack Status](https://slack.bhom.com/badge.svg)](https://bhom.xyz)
+[![Slack Status](https://bhom.slack.com/badge.svg)](https://bhom.xyz)
 
 ### Get started
 
