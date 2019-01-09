@@ -1,3 +1,5 @@
+[![Slack Status](https://slack.bhom.com/badge.svg)](https://bhom.xyz)
+
 ### Get started
 
 1. Download and install [anaconda python](https://www.anaconda.com/download/) and make sure to add it to the environmental path
